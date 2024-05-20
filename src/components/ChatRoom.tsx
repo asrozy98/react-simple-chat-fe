@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import bg from "../assets/circuit-board.svg";
 import { socket } from "../libs/socket";
 
-interface messageInterface {
+export interface messageInterface {
   id: string | number;
   name: string;
   text: string;
-  socketId: string;
 }
 
 interface dataInterface {
@@ -28,18 +27,16 @@ export function ChatRoom({
   const lastMessageRef = useRef<null | HTMLDivElement>(null);
   const [message, setMessage] = useState("");
 
-  const handleSendMessage = (e: { preventDefault: () => void }) => {
-    e.preventDefault();
+  function handleSendMessage() {
     if (message.trim() && username) {
       socket.emit("sentMessage", {
         text: message,
         name: username,
         id: `${socket.id}${Math.random()}`,
-        socketId: socket.id,
       });
     }
     setMessage("");
-  };
+  }
 
   useEffect(() => {
     socket.on("messageResponse", (data) => {
@@ -48,6 +45,7 @@ export function ChatRoom({
   }, [socket, messages]);
 
   useEffect(() => {
+    // scroll to bottom
     lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -66,12 +64,12 @@ export function ChatRoom({
       >
         {messages &&
           messages.map((message) =>
-            message.socketId === socket.id ? (
+            message.name === username ? (
               <div
                 className="w-1/2 bg-green-600 rounded-xl rounded-br-none px-2 py-1 ml-auto mt-2"
                 key={message.id}
               >
-                <p className="font-bold">You</p>
+                <p className="font-bold">Kamu</p>
                 <div className="px-1">
                   <p>{message.text}</p>
                 </div>
@@ -92,12 +90,13 @@ export function ChatRoom({
       </div>
       <div className="w-full flex justify-between items-center gap-2 shadow-2xl p-2">
         <input
-          className="w-5/6 rounded-md text-black p-2"
+          className="w-4/6 sm:w-5/6 rounded-md text-black p-2"
           value={message}
+          placeholder="Isi pesan"
           onChange={(e) => setMessage(e.target.value)}
         />
         <button
-          className="w-1/6 rounded-md bg-green-700 p-2"
+          className="w-2/6 sm:w-1/6 rounded-md bg-green-700 p-2"
           onClick={handleSendMessage}
         >
           Kirim
